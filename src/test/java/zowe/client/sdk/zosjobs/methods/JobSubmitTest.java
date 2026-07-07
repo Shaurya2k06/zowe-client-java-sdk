@@ -10,7 +10,8 @@
 package zowe.client.sdk.zosjobs.methods;
 
 import kong.unirest.core.Cookie;
-import org.json.simple.JSONObject;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -26,8 +27,7 @@ import zowe.client.sdk.zosjobs.model.Job;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.Map;
+
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -40,6 +40,8 @@ import static org.mockito.Mockito.*;
  */
 public class JobSubmitTest {
 
+
+    private final ObjectMapper mapper = new ObjectMapper();
     private final ZosConnection connection = ZosConnectionFactory
             .createBasicConnection("1", 443, "1", "1");
     private final ZosConnection tokenConnection = ZosConnectionFactory
@@ -52,7 +54,7 @@ public class JobSubmitTest {
 
     @BeforeEach
     public void init() throws ZosmfRequestException {
-        JSONObject jobJson = getJsonObject();
+        ObjectNode jobJson = getJsonObject();
 
         mockPutJsonZosmfRequest = Mockito.mock(PutJsonZosmfRequest.class);
         mockPutTextZosmfRequest = Mockito.mock(PutTextZosmfRequest.class);
@@ -76,21 +78,22 @@ public class JobSubmitTest {
         doCallRealMethod().when(mockPutJsonZosmfRequestToken).getUrl();
     }
 
-    private static JSONObject getJsonObject() {
-        final Map<String, String> jsonMap = new HashMap<>();
-        jsonMap.put("jobid", "jobid");
-        jsonMap.put("jobname", "jobname");
-        jsonMap.put("subsystem", "subsystem");
-        jsonMap.put("owner", "owner");
-        jsonMap.put("status", "status");
-        jsonMap.put("type", "type");
-        jsonMap.put("class", "class");
-        jsonMap.put("retcode", "retcode");
-        jsonMap.put("url", "url");
-        jsonMap.put("files-url", "files-url");
-        jsonMap.put("job-correlator", "job-correlator");
-        jsonMap.put("phase-name", "phase-name");
-        return new JSONObject(jsonMap);
+    private static ObjectNode getJsonObject() {
+        final ObjectMapper mapper = new ObjectMapper();
+        final ObjectNode node = mapper.createObjectNode();
+        node.put("jobid", "jobid");
+        node.put("jobname", "jobname");
+        node.put("subsystem", "subsystem");
+        node.put("owner", "owner");
+        node.put("status", "status");
+        node.put("type", "type");
+        node.put("class", "class");
+        node.put("retcode", "retcode");
+        node.put("url", "url");
+        node.put("files-url", "files-url");
+        node.put("job-correlator", "job-correlator");
+        node.put("phase-name", "phase-name");
+        return node;
     }
 
     @Test

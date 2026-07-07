@@ -10,7 +10,8 @@
 package zowe.client.sdk.zosconsole.methods;
 
 import kong.unirest.core.Cookie;
-import org.json.simple.JSONObject;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -39,6 +40,7 @@ import static org.mockito.Mockito.withSettings;
  */
 public class ConsoleGetTest {
 
+    private final ObjectMapper mapper = new ObjectMapper();
     private final ZosConnection connection =
             ZosConnectionFactory.createBasicConnection("1", 443, "1", "1");
     private final ZosConnection tokenConnection =
@@ -108,7 +110,7 @@ public class ConsoleGetTest {
     public void tstConsoleGetToggleTokenSuccess() throws Exception {
         final Map<String, Object> jsonMap = new HashMap<>();
         jsonMap.put("cmd-response", "LINE1\rLINE2");
-        final JSONObject json = new JSONObject(jsonMap);
+        final ObjectNode json = mapper.convertValue(jsonMap, ObjectNode.class);
 
         // Create mock with token constructor
         GetJsonZosmfRequest mockJsonGetRequestAuth = Mockito.mock(
@@ -143,7 +145,7 @@ public class ConsoleGetTest {
     public void tstConsoleGetResponseSuccess() throws ZosmfRequestException {
         final Map<String, Object> jsonMap = new HashMap<>();
         jsonMap.put("cmd-response", "LINE1\rLINE2");
-        final JSONObject json = new JSONObject(jsonMap);
+        final ObjectNode json = mapper.convertValue(jsonMap, ObjectNode.class);
         Mockito.when(mockJsonGetRequest.executeRequest()).thenReturn(
                 new Response(json, 200, "{ \"cmd-response\": \"LINE1\\rLINE2\" }")
         );
@@ -156,7 +158,7 @@ public class ConsoleGetTest {
     public void tstConsoleGetResponseBlankContentSuccess() throws ZosmfRequestException {
         final Map<String, Object> jsonMap = new HashMap<>();
         jsonMap.put("cmd-response", "");
-        final JSONObject json = new JSONObject(jsonMap);
+        final ObjectNode json = mapper.convertValue(jsonMap, ObjectNode.class);
         Mockito.when(mockJsonGetRequest.executeRequest()).thenReturn(
                 new Response(json, 200, "{ \"cmd-response\": \"\" }")
         );

@@ -9,7 +9,8 @@
  */
 package zowe.client.sdk.teamconfig;
 
-import org.json.simple.JSONObject;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import zowe.client.sdk.teamconfig.exception.TeamConfigException;
@@ -193,7 +194,10 @@ public class TeamConfig {
                                     Map.Entry::getKey,
                                     Map.Entry::getValue,
                                     (oldValue, newValue) -> oldValue));
-            return new Profile(target.getName(), target.getType(), new JSONObject(mergedMap), target.getSecure());
+            final ObjectMapper mapper = new ObjectMapper();
+            final ObjectNode mergedNode = mapper.createObjectNode();
+            mergedMap.forEach(mergedNode::put);
+            return new Profile(target.getName(), target.getType(), mergedNode, target.getSecure());
         }
 
         return target;

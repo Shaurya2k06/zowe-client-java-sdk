@@ -10,7 +10,7 @@
 package zowe.client.sdk.zosmfworkflow.methods;
 
 import kong.unirest.core.Cookie;
-import org.json.simple.JSONObject;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import zowe.client.sdk.core.ZosConnection;
@@ -36,6 +36,8 @@ import static org.mockito.Mockito.withSettings;
  */
 public class WorkflowDeleteTest {
 
+
+    private final ObjectMapper mapper = new ObjectMapper();
     private final ZosConnection connection = ZosConnectionFactory
             .createBasicConnection("1", 443, "1", "1");
     private final ZosConnection tokenConnection = ZosConnectionFactory
@@ -98,7 +100,7 @@ public class WorkflowDeleteTest {
     public void tstWorkflowDeleteSuccess() throws ZosmfRequestException {
         Mockito.when(connection.getZosmfUrl()).thenReturn("https://1:443");
         DeleteJsonZosmfRequest mockDeleteRequest = Mockito.mock(DeleteJsonZosmfRequest.class);
-        Mockito.when(mockDeleteRequest.executeRequest()).thenReturn(new Response(new JSONObject(), 200, "success"));
+        Mockito.when(mockDeleteRequest.executeRequest()).thenReturn(new Response(mapper.createObjectNode(), 200, "success"));
 
         doCallRealMethod().when(mockDeleteRequest).setUrl(any());
         doCallRealMethod().when(mockDeleteRequest).getUrl();
@@ -138,7 +140,7 @@ public class WorkflowDeleteTest {
         ZosConnection connection = Mockito.mock(ZosConnection.class);
         Mockito.when(connection.getZosmfUrl()).thenReturn("https://1:443/zosmf");
         DeleteJsonZosmfRequest mockDeleteRequest = Mockito.mock(DeleteJsonZosmfRequest.class);
-        Mockito.when(mockDeleteRequest.executeRequest()).thenReturn(new Response(new JSONObject(), 200, "success"));
+        Mockito.when(mockDeleteRequest.executeRequest()).thenReturn(new Response(mapper.createObjectNode(), 200, "success"));
 
         doCallRealMethod().when(mockDeleteRequest).setUrl(any());
         doCallRealMethod().when(mockDeleteRequest).getUrl();
@@ -154,7 +156,7 @@ public class WorkflowDeleteTest {
         ZosConnection connection = Mockito.mock(ZosConnection.class);
         Mockito.when(connection.getZosmfUrl()).thenReturn("https://1:443/zosmf");
         DeleteJsonZosmfRequest mockDeleteRequest = Mockito.mock(DeleteJsonZosmfRequest.class);
-        Mockito.when(mockDeleteRequest.executeRequest()).thenReturn(new Response(new JSONObject(), 200, "success"));
+        Mockito.when(mockDeleteRequest.executeRequest()).thenReturn(new Response(mapper.createObjectNode(), 200, "success"));
 
         doCallRealMethod().when(mockDeleteRequest).setUrl(any());
         doCallRealMethod().when(mockDeleteRequest).getUrl();
@@ -195,14 +197,14 @@ public class WorkflowDeleteTest {
     public void tstWorkflowDeleteTokenSuccess() throws ZosmfRequestException {
         DeleteJsonZosmfRequest mockJsonDeleteRequest = Mockito.mock(DeleteJsonZosmfRequest.class);
         Mockito.when(mockJsonDeleteRequest.executeRequest()).thenReturn(
-                new Response(new JSONObject(), 200, "success"));
+                new Response(mapper.createObjectNode(), 200, "success"));
         doCallRealMethod().when(mockJsonDeleteRequest).setUrl(any());
         doCallRealMethod().when(mockJsonDeleteRequest).getUrl();
 
         mockJsonDeleteRequestToken = Mockito.mock(DeleteJsonZosmfRequest.class,
                 withSettings().useConstructor(tokenConnection));
         Mockito.when(mockJsonDeleteRequestToken.executeRequest()).thenReturn(
-                new Response(new JSONObject(), 200, "success"));
+                new Response(mapper.createObjectNode(), 200, "success"));
         doCallRealMethod().when(mockJsonDeleteRequestToken).setHeaders(anyMap());
         doCallRealMethod().when(mockJsonDeleteRequestToken).setStandardHeaders();
         doCallRealMethod().when(mockJsonDeleteRequestToken).setUrl(any());
@@ -224,14 +226,14 @@ public class WorkflowDeleteTest {
     public void tstWorkflowArchivedDeleteTokenSuccess() throws ZosmfRequestException {
         DeleteJsonZosmfRequest mockJsonDeleteRequest = Mockito.mock(DeleteJsonZosmfRequest.class);
         Mockito.when(mockJsonDeleteRequest.executeRequest()).thenReturn(
-                new Response(new JSONObject(), 200, "success"));
+                new Response(mapper.createObjectNode(), 200, "success"));
         doCallRealMethod().when(mockJsonDeleteRequest).setUrl(any());
         doCallRealMethod().when(mockJsonDeleteRequest).getUrl();
 
         mockJsonDeleteRequestToken = Mockito.mock(DeleteJsonZosmfRequest.class,
                 withSettings().useConstructor(tokenConnection));
         Mockito.when(mockJsonDeleteRequestToken.executeRequest()).thenReturn(
-                new Response(new JSONObject(), 200, "success"));
+                new Response(mapper.createObjectNode(), 200, "success"));
         doCallRealMethod().when(mockJsonDeleteRequestToken).setHeaders(anyMap());
         doCallRealMethod().when(mockJsonDeleteRequestToken).setStandardHeaders();
         doCallRealMethod().when(mockJsonDeleteRequestToken).setUrl(any());

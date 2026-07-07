@@ -13,13 +13,14 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
-import org.json.simple.JSONObject;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import zowe.client.sdk.rest.exception.ZosmfRequestException;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.TreeMap;
 
 /**
  * Utility class contains helper methods for JSON parse processing.
@@ -111,18 +112,34 @@ public final class JsonUtils {
      * @return a {@code Map<String, String>} with all keys its values as all String values
      * @throws JsonProcessingException if JSON parsing fails
      */
-    public static Map<String, String> parseMap(JSONObject jsonObject) throws JsonProcessingException {
-        // Convert the org.json.JSONObject to Jackson JsonNode for traversal
-        final JsonNode root = objectMapper.readTree(jsonObject.toString());
-
+    public static Map<String, String> parseMap(final ObjectNode objectNode) throws JsonProcessingException {
         final Map<String, String> map = new HashMap<>();
 
-        for (Map.Entry<String, JsonNode> entry : root.properties()) {
+        objectNode.fields().forEachRemaining(entry -> {
             // Convert any type to string
             map.put(entry.getKey(), entry.getValue().asText());
-        }
+        });
 
         return map;
+    }
+    /**
+     * Serialize a {@code Map<String, String>} to a JSON string using Jackson.
+     * <p>
+     * Keys are sorted alphabetically to ensure deterministic output, making
+     * this a safe replacement for {@code new JSONObject(map).toString()}.
+     * </p>
+     *
+     * @param map the map to serialize
+     * @return JSON string representation
+     * @throws ZosmfRequestException if serialization fails
+     */
+    public static String toJsonString(final Map<String, String> map) throws ZosmfRequestException {
+        try {
+            return objectMapper.writeValueAsString(new TreeMap<>(map));
+        } catch (JsonProcessingException e) {
+            LOG.debug("json serialization error", e);
+            throw new ZosmfRequestException("json serialization error: " + e.getMessage(), e);
+        }
     }
 
 }

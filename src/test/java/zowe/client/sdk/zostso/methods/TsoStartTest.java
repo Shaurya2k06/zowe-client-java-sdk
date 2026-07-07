@@ -9,7 +9,8 @@
  */
 package zowe.client.sdk.zostso.methods;
 
-import org.json.simple.JSONObject;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -38,6 +39,7 @@ import static org.mockito.Mockito.*;
  */
 public class TsoStartTest {
 
+    private final ObjectMapper mapper = new ObjectMapper();
     private ZosConnection mockConnection;
     private PostJsonZosmfRequest mockRequest;
     private TsoStart tsoStart;
@@ -225,7 +227,7 @@ public class TsoStartTest {
         final Map<String, Object> map = new HashMap<>();
         map.put("servletKey", "SERVKEY123");
         Mockito.when(mockRequest.executeRequest()).thenReturn(
-                new Response(new JSONObject(map), 200, "success"));
+                new Response(mapper.convertValue(map, ObjectNode.class), 200, "success"));
 
         final TsoStartResponse result = tsoStart.start(inputData);
         assertEquals("SERVKEY123", result.getSessionId());

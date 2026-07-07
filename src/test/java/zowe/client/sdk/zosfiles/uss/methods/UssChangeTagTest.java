@@ -9,6 +9,7 @@
  */
 package zowe.client.sdk.zosfiles.uss.methods;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import kong.unirest.core.Cookie;
 import kong.unirest.core.json.JSONObject;
 import org.junit.jupiter.api.BeforeEach;
@@ -38,6 +39,7 @@ import static org.mockito.Mockito.withSettings;
  */
 public class UssChangeTagTest {
 
+    private final ObjectMapper mapper = new ObjectMapper();
     private final ZosConnection connection = ZosConnectionFactory
             .createBasicConnection("1", 443, "1", "1");
     private final ZosConnection tokenConnection = ZosConnectionFactory
@@ -57,7 +59,7 @@ public class UssChangeTagTest {
         mockJsonPutRequestToken = Mockito.mock(PutJsonZosmfRequest.class,
                 withSettings().useConstructor(tokenConnection));
         Mockito.when(mockJsonPutRequestToken.executeRequest()).thenReturn(
-                new Response(new org.json.simple.JSONObject(), 200, "success"));
+                new Response(mapper.createObjectNode(), 200, "success"));
         doCallRealMethod().when(mockJsonPutRequestToken).setHeaders(anyMap());
         doCallRealMethod().when(mockJsonPutRequestToken).setStandardHeaders();
         doCallRealMethod().when(mockJsonPutRequestToken).setUrl(any());

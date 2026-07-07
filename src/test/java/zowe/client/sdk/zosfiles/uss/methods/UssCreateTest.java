@@ -10,7 +10,7 @@
 package zowe.client.sdk.zosfiles.uss.methods;
 
 import kong.unirest.core.Cookie;
-import org.json.simple.JSONObject;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -39,6 +39,8 @@ import static org.mockito.Mockito.withSettings;
 @SuppressWarnings("ALL")
 public class UssCreateTest {
 
+
+    private final ObjectMapper mapper = new ObjectMapper();
     private final ZosConnection connection = ZosConnectionFactory
             .createBasicConnection("1", 443, "1", "1");
     private final ZosConnection tokenConnection = ZosConnectionFactory
@@ -51,14 +53,14 @@ public class UssCreateTest {
     public void init() throws ZosmfRequestException {
         mockJsonPostRequest = Mockito.mock(PostJsonZosmfRequest.class);
         Mockito.when(mockJsonPostRequest.executeRequest()).thenReturn(
-                new Response(new JSONObject(), 200, "success"));
+                new Response(mapper.createObjectNode(), 200, "success"));
         doCallRealMethod().when(mockJsonPostRequest).setUrl(any());
         doCallRealMethod().when(mockJsonPostRequest).getUrl();
 
         mockJsonPostRequestToken = Mockito.mock(PostJsonZosmfRequest.class,
                 withSettings().useConstructor(tokenConnection));
         Mockito.when(mockJsonPostRequestToken.executeRequest()).thenReturn(
-                new Response(new JSONObject(), 200, "success"));
+                new Response(mapper.createObjectNode(), 200, "success"));
         doCallRealMethod().when(mockJsonPostRequestToken).setHeaders(anyMap());
         doCallRealMethod().when(mockJsonPostRequestToken).setStandardHeaders();
         doCallRealMethod().when(mockJsonPostRequestToken).setUrl(any());

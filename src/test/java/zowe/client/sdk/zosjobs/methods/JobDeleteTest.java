@@ -10,7 +10,7 @@
 package zowe.client.sdk.zosjobs.methods;
 
 import kong.unirest.core.Cookie;
-import org.json.simple.JSONObject;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -36,6 +36,8 @@ import static org.mockito.Mockito.withSettings;
  */
 public class JobDeleteTest {
 
+
+    private final ObjectMapper mapper = new ObjectMapper();
     private final ZosConnection connection = ZosConnectionFactory
             .createBasicConnection("1", 443, "1", "1");
     private final ZosConnection tokenConnection = ZosConnectionFactory
@@ -47,14 +49,14 @@ public class JobDeleteTest {
     public void init() throws ZosmfRequestException {
         mockJsonDeleteRequest = Mockito.mock(DeleteJsonZosmfRequest.class);
         Mockito.when(mockJsonDeleteRequest.executeRequest()).thenReturn(
-                new Response(new JSONObject(), 200, "success"));
+                new Response(mapper.createObjectNode(), 200, "success"));
         doCallRealMethod().when(mockJsonDeleteRequest).setUrl(any());
         doCallRealMethod().when(mockJsonDeleteRequest).getUrl();
 
         mockJsonDeleteRequestToken = Mockito.mock(DeleteJsonZosmfRequest.class,
                 withSettings().useConstructor(tokenConnection));
         Mockito.when(mockJsonDeleteRequestToken.executeRequest()).thenReturn(
-                new Response(new JSONObject(), 200, "success"));
+                new Response(mapper.createObjectNode(), 200, "success"));
         doCallRealMethod().when(mockJsonDeleteRequestToken).setHeaders(anyMap());
         doCallRealMethod().when(mockJsonDeleteRequestToken).setStandardHeaders();
         doCallRealMethod().when(mockJsonDeleteRequestToken).setUrl(any());

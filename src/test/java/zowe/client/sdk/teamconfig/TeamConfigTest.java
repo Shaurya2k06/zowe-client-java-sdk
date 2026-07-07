@@ -9,7 +9,8 @@
  */
 package zowe.client.sdk.teamconfig;
 
-import org.json.simple.JSONObject;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -46,7 +47,8 @@ public class TeamConfigTest {
 
     @Test
     public void tstTeamConfigGetDefaultProfileFailure() throws TeamConfigException {
-        final JSONObject props = new JSONObject(Map.of("port", "433"));
+        final ObjectNode props = new ObjectMapper().createObjectNode();
+        props.put("port", "433");
         final List<Profile> profiles = List.of(new Profile("frank1", "zosmf", props, null));
         final Map<String, String> defaults = Map.of("zosmf", "frank");
         Mockito.when(teamConfigServiceMock.getTeamConfig(any())).thenReturn(
@@ -71,7 +73,8 @@ public class TeamConfigTest {
 
     @Test
     public void tstTeamConfigGetDefaultProfileTypeNotFoundFailure() throws TeamConfigException {
-        final JSONObject props = new JSONObject(Map.of("port", "433"));
+        final ObjectNode props = new ObjectMapper().createObjectNode();
+        props.put("port", "433");
         final List<Profile> profiles = List.of(new Profile("frank", "zosmf1", props, null));
         final Map<String, String> defaults = Map.of("zosmf", "frank");
         Mockito.when(teamConfigServiceMock.getTeamConfig(any())).thenReturn(
@@ -96,7 +99,8 @@ public class TeamConfigTest {
 
     @Test
     public void tstTeamConfigGetDefaultProfileSuccess() throws TeamConfigException {
-        final JSONObject props = new JSONObject(Map.of("port", "433"));
+        final ObjectNode props = new ObjectMapper().createObjectNode();
+        props.put("port", "433");
         final List<Profile> profiles = List.of(new Profile("frank", "zosmf", props, null));
         final Map<String, String> defaults = Map.of("zosmf", "frank");
         Mockito.when(teamConfigServiceMock.getTeamConfig(any())).thenReturn(
@@ -124,7 +128,10 @@ public class TeamConfigTest {
 
     @Test
     public void tstTeamConfigGetDefaultProfileHostAndPortValuesSuccess() throws TeamConfigException {
-        final JSONObject props = new JSONObject(Map.of("port", "433", "host", "host"));
+        final ObjectMapper mapper = new ObjectMapper();
+        final ObjectNode props = mapper.createObjectNode();
+        props.put("port", "433");
+        props.put("host", "host");
         final List<Profile> profiles = List.of(new Profile("frank", "zosmf", props, null));
         final Map<String, String> defaults = Map.of("zosmf", "frank");
         Mockito.when(teamConfigServiceMock.getTeamConfig(any())).thenReturn(
@@ -140,8 +147,13 @@ public class TeamConfigTest {
 
     @Test
     public void tstTeamConfigGetDefaultProfileMergeNonBaseHostValueSuccess() throws TeamConfigException {
-        final JSONObject props = new JSONObject(Map.of("port", "433", "host", "host"));
-        final JSONObject baseProps = new JSONObject(Map.of("port", "433", "host", "host1"));
+        final ObjectMapper mapper = new ObjectMapper();
+        final ObjectNode props = mapper.createObjectNode();
+        props.put("port", "433");
+        props.put("host", "host");
+        final ObjectNode baseProps = mapper.createObjectNode();
+        baseProps.put("port", "433");
+        baseProps.put("host", "host1");
         final List<Profile> profiles = List.of(new Profile("frank", "zosmf", props, null),
                 new Profile("base", "base", baseProps, null));
         final Map<String, String> defaults = Map.of("zosmf", "frank");
@@ -157,8 +169,12 @@ public class TeamConfigTest {
 
     @Test
     public void tstTeamConfigGetDefaultProfileMergeBaseHostValueSuccess() throws TeamConfigException {
-        final JSONObject props = new JSONObject(Map.of("port", "433"));
-        final JSONObject baseProps = new JSONObject(Map.of("port", "433", "host", "host1"));
+        final ObjectMapper mapper = new ObjectMapper();
+        final ObjectNode props = mapper.createObjectNode();
+        props.put("port", "433");
+        final ObjectNode baseProps = mapper.createObjectNode();
+        baseProps.put("port", "433");
+        baseProps.put("host", "host1");
         final List<Profile> profiles = List.of(new Profile("frank", "zosmf", props, null),
                 new Profile("base", "base", baseProps, null));
         final Map<String, String> defaults = Map.of("zosmf", "frank");
@@ -174,7 +190,8 @@ public class TeamConfigTest {
 
     @Test
     public void tstTeamConfigGetDefaultProfileUserNameAndPasswordValuesSuccess() throws TeamConfigException {
-        final JSONObject props = new JSONObject(Map.of("port", "433"));
+        final ObjectNode props = new ObjectMapper().createObjectNode();
+        props.put("port", "433");
         final List<Profile> profiles = List.of(new Profile("frank", "zosmf", props, null));
         final Map<String, String> defaults = Map.of("zosmf", "frank");
         Mockito.when(teamConfigServiceMock.getTeamConfig(any())).thenReturn(

@@ -11,18 +11,18 @@ package zowe.client.sdk.teamconfig.keytar;
 
 import com.starxg.keytar.Keytar;
 import com.starxg.keytar.KeytarException;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import zowe.client.sdk.teamconfig.exception.TeamConfigException;
 import zowe.client.sdk.utility.ValidateUtils;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
-import java.util.Set;
 
 /**
  * Implementation class for IkeyTar interface that contains the logic for KeyTar processing
@@ -98,20 +98,21 @@ public class KeyTarImpl implements IKeyTar {
      */
     @SuppressWarnings("unchecked")
     private List<KeyTarConfig> parseJson() throws TeamConfigException {
-        final JSONObject jsonKeyTar;
+        final ObjectMapper mapper = new ObjectMapper();
+        final ObjectNode jsonKeyTar;
         try {
-            jsonKeyTar = (JSONObject) new JSONParser().parse(keyString);
-        } catch (ParseException e) {
+            jsonKeyTar = (ObjectNode) mapper.readTree(keyString);
+        } catch (IOException e) {
             throw new TeamConfigException("Error parsing KeyTar string.", e);
         }
 
-        final Set<String> keyTarKeys = jsonKeyTar.keySet();
-        for (final String keyVal : keyTarKeys) {
-            JSONObject jsonVal = (JSONObject) jsonKeyTar.get(keyVal);
+        jsonKeyTar.fields().forEachRemaining(entry -> {
+            final String keyVal = entry.getKey();
+            final JsonNode jsonVal = entry.getValue();
             keyTarConfigs.add(new KeyTarConfig(keyVal,
-                    (String) jsonVal.get("profiles.base.properties.user"),
-                    (String) jsonVal.get("profiles.base.properties.password")));
-        }
+                    jsonVal.has("profiles.base.properties.user") ? jsonVal.get("profiles.base.properties.user").asText() : null,
+                    jsonVal.has("profiles.base.properties.password") ? jsonVal.get("profiles.base.properties.password").asText() : null));
+        });
         return keyTarConfigs;
     }
 

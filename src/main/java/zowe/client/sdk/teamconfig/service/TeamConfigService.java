@@ -10,10 +10,10 @@
 package zowe.client.sdk.teamconfig.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import zowe.client.sdk.teamconfig.exception.TeamConfigException;
@@ -25,7 +25,7 @@ import zowe.client.sdk.teamconfig.types.SectionType;
 import zowe.client.sdk.utility.JsonUtils;
 import zowe.client.sdk.utility.ValidateUtils;
 
-import java.io.FileReader;
+import java.io.File;
 import java.io.IOException;
 import java.util.*;
 
@@ -38,6 +38,7 @@ import java.util.*;
 public class TeamConfigService {
 
     private static final Logger LOG = LoggerFactory.getLogger(TeamConfigService.class);
+    private static final ObjectMapper objectMapper = new ObjectMapper();
 
     /**
      * Create a new TeamConfigService instance.
@@ -50,30 +51,37 @@ public class TeamConfigService {
      * Parse a JSON representation of a Zowe Global Team Configuration partition section.
      *
      * @param name       partition name
-     * @param jsonObject JSONObject object
+     * @param jsonObject ObjectNode object
      * @return Partition object
      * @author Frank Giordano
      */
-    @SuppressWarnings("unchecked")
-    private Partition getPartition(final String name, final JSONObject jsonObject) throws TeamConfigException {
-        final Set<String> keyObjs = jsonObject.keySet();
+    private Partition getPartition(final String name, final ObjectNode jsonObject) throws TeamConfigException {
         final List<Profile> profiles = new ArrayList<>();
         Map<String, String> properties = new HashMap<>();
         LOG.debug("partition found name {} containing {}:", name, jsonObject);
-        for (final String keyObj : keyObjs) {
+        final Iterator<Map.Entry<String, JsonNode>> fields = jsonObject.fields();
+        while (fields.hasNext()) {
+            final Map.Entry<String, JsonNode> entry = fields.next();
+            final String keyObj = entry.getKey();
             if (SectionType.PROFILES.getValue().equals(keyObj)) {
-                JSONObject jsonProfileObj = (JSONObject) jsonObject.get(SectionType.PROFILES.getValue());
-                final Set<String> jsonProfileKeys = jsonProfileObj.keySet();
-                for (final String profileKeyVal : jsonProfileKeys) {
-                    final JSONObject profileTypeJsonObj = (JSONObject) jsonProfileObj.get(profileKeyVal);
+                final ObjectNode jsonProfileObj = (ObjectNode) entry.getValue();
+                final Iterator<Map.Entry<String, JsonNode>> profileFields = jsonProfileObj.fields();
+                while (profileFields.hasNext()) {
+                    final Map.Entry<String, JsonNode> profileEntry = profileFields.next();
+                    final String profileKeyVal = profileEntry.getKey();
+                    final ObjectNode profileTypeJsonObj = (ObjectNode) profileEntry.getValue();
+                    final ObjectNode propsNode = profileTypeJsonObj.has("properties")
+                            ? (ObjectNode) profileTypeJsonObj.get("properties") : objectMapper.createObjectNode();
+                    final ArrayNode secureNode = profileTypeJsonObj.has("secure")
+                            ? (ArrayNode) profileTypeJsonObj.get("secure") : null;
                     profiles.add(new Profile(profileKeyVal,
-                            (String) profileTypeJsonObj.get("type"),
-                            (JSONObject) profileTypeJsonObj.get("properties"),
-                            (JSONArray) profileTypeJsonObj.get("secure")));
+                            profileTypeJsonObj.has("type") ? profileTypeJsonObj.get("type").asText() : null,
+                            propsNode,
+                            secureNode));
                 }
             } else if ("properties".equalsIgnoreCase(keyObj)) {
                 try {
-                    properties = JsonUtils.parseMap((JSONObject) jsonObject.get(keyObj));
+                    properties = JsonUtils.parseMap((ObjectNode) entry.getValue());
                 } catch (JsonProcessingException e) {
                     throw new TeamConfigException("Error parsing properties", e);
                 }
@@ -92,14 +100,13 @@ public class TeamConfigService {
      */
     public ConfigContainer getTeamConfig(final KeyTarConfig config) throws TeamConfigException {
         ValidateUtils.checkNullParameter(config, "config");
-        final JSONParser parser = new JSONParser();
-        Object obj;
+        final JsonNode root;
         try {
-            obj = parser.parse(new FileReader(config.getLocation()));
-        } catch (IOException | ParseException e) {
+            root = objectMapper.readTree(new File(config.getLocation()));
+        } catch (IOException e) {
             throw new TeamConfigException("Error reading zowe global team configuration file", e);
         }
-        return parseJson((JSONObject) obj);
+        return parseJson((ObjectNode) root);
     }
 
     /**
@@ -109,10 +116,10 @@ public class TeamConfigService {
      * @return boolean true or false
      * @author Frank Giordano
      */
-    private boolean isPartition(final Set<String> profileKeyObj) {
-        final Iterator<String> itr = profileKeyObj.iterator();
-        if (itr.hasNext()) {
-            String keyVal = itr.next();
+    private boolean isPartition(final ObjectNode profileTypeJsonObj) {
+        final Iterator<String> fieldNames = profileTypeJsonObj.fieldNames();
+        if (fieldNames.hasNext()) {
+            String keyVal = fieldNames.next();
             return SectionType.PROFILES.getValue().equals(keyVal);
         } else {
             throw new IllegalStateException("TeamConfig profile type detail missing in profile section.");
@@ -122,46 +129,48 @@ public class TeamConfigService {
     /**
      * Parse a JSON representation of a Zowe Global Team Configuration file.
      *
-     * @param jsonObj JSONObject object
+     * @param jsonObj ObjectNode object
      * @return ConfigContainer object
      * @author Frank Giordano
      */
-    @SuppressWarnings("unchecked")
-    private ConfigContainer parseJson(final JSONObject jsonObj) throws TeamConfigException {
+    private ConfigContainer parseJson(final ObjectNode jsonObj) throws TeamConfigException {
         String schema = null;
         Boolean autoStore = null;
         final List<Profile> profiles = new ArrayList<>();
         final Map<String, String> defaults = new HashMap<>();
         final List<Partition> partitions = new ArrayList<>();
 
-        final Set<String> jsonSectionKeys = jsonObj.keySet();
-        for (final String keySectionVal : jsonSectionKeys) {
+        final Iterator<Map.Entry<String, JsonNode>> sectionFields = jsonObj.fields();
+        while (sectionFields.hasNext()) {
+            final Map.Entry<String, JsonNode> sectionEntry = sectionFields.next();
+            final String keySectionVal = sectionEntry.getKey();
             if (SectionType.$SCHEMA.getValue().equals(keySectionVal)) {
-                schema = (String) jsonObj.get(SectionType.$SCHEMA.getValue());
+                schema = sectionEntry.getValue().asText();
             } else if (SectionType.PROFILES.getValue().equals(keySectionVal)) {
-                final JSONObject jsonProfileObj = (JSONObject) jsonObj.get(SectionType.PROFILES.getValue());
-                final Set<String> jsonProfileKeys = jsonProfileObj.keySet();
-                for (final String profileKeyVal : jsonProfileKeys) {
-                    JSONObject profileTypeJsonObj = (JSONObject) jsonProfileObj.get(profileKeyVal);
-                    final Set<String> isEmbeddedKeyProfile = profileTypeJsonObj.keySet();
-                    if (isPartition(isEmbeddedKeyProfile)) {
+                final ObjectNode jsonProfileObj = (ObjectNode) sectionEntry.getValue();
+                final Iterator<Map.Entry<String, JsonNode>> profileFields = jsonProfileObj.fields();
+                while (profileFields.hasNext()) {
+                    final Map.Entry<String, JsonNode> profileEntry = profileFields.next();
+                    final String profileKeyVal = profileEntry.getKey();
+                    final ObjectNode profileTypeJsonObj = (ObjectNode) profileEntry.getValue();
+                    if (isPartition(profileTypeJsonObj)) {
                         partitions.add(getPartition(profileKeyVal, profileTypeJsonObj));
                     } else {
+                        final ObjectNode propsNode = profileTypeJsonObj.has("properties")
+                                ? (ObjectNode) profileTypeJsonObj.get("properties") : objectMapper.createObjectNode();
+                        final ArrayNode secureNode = profileTypeJsonObj.has("secure")
+                                ? (ArrayNode) profileTypeJsonObj.get("secure") : null;
                         profiles.add(new Profile(profileKeyVal,
-                                (String) profileTypeJsonObj.get("type"),
-                                (JSONObject) profileTypeJsonObj.get("properties"),
-                                (JSONArray) profileTypeJsonObj.get("secure")));
+                                profileTypeJsonObj.has("type") ? profileTypeJsonObj.get("type").asText() : null,
+                                propsNode,
+                                secureNode));
                     }
                 }
             } else if (SectionType.DEFAULTS.getValue().equals(keySectionVal)) {
-                final JSONObject keyValues = (JSONObject) jsonObj.get(SectionType.DEFAULTS.getValue());
-                for (final Object defaultKeyVal : keyValues.keySet()) {
-                    final String key = (String) defaultKeyVal;
-                    final String value = (String) keyValues.get(key);
-                    defaults.put(key, value);
-                }
+                final ObjectNode keyValues = (ObjectNode) sectionEntry.getValue();
+                keyValues.fields().forEachRemaining(e -> defaults.put(e.getKey(), e.getValue().asText()));
             } else if (SectionType.AUTOSTORE.getValue().equals(keySectionVal)) {
-                autoStore = (boolean) jsonObj.get(SectionType.AUTOSTORE.getValue());
+                autoStore = sectionEntry.getValue().asBoolean();
             }
         }
 

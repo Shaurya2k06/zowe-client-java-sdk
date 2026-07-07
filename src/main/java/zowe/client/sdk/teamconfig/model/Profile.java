@@ -10,8 +10,8 @@
 package zowe.client.sdk.teamconfig.model;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import zowe.client.sdk.teamconfig.exception.TeamConfigException;
 import zowe.client.sdk.utility.JsonUtils;
 
@@ -38,7 +38,7 @@ public class Profile {
     /**
      * Profile secure json object
      */
-    private final JSONArray secure;
+    private final ArrayNode secure;
 
     /**
      * Profile property values
@@ -55,7 +55,7 @@ public class Profile {
      * @throws TeamConfigException error processing team configuration
      * @author Frank Giordano
      */
-    public Profile(final String name, final String type, final JSONObject obj, final JSONArray secure)
+    public Profile(final String name, final String type, final ObjectNode obj, final ArrayNode secure)
             throws TeamConfigException {
         this.name = name;
         this.type = type;
@@ -97,9 +97,9 @@ public class Profile {
     /**
      * Return secure value
      *
-     * @return secure JSON object
+     * @return secure JSON array node
      */
-    public JSONArray getSecure() {
+    public ArrayNode getSecure() {
         return secure;
     }
 
